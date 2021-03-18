@@ -49,7 +49,8 @@ async function getCLS(url, traceOut, chromePath) {
   const browser = await puppeteer.launch({
     executablePath: chromePath,
     args: ['--no-sandbox'],
-    timeout: 10000
+    timeout: 10000,
+    headless: true,
   });
 
   try {
@@ -74,7 +75,7 @@ async function getCLS(url, traceOut, chromePath) {
     if (traceOut) {
       await page.tracing.start({ screenshots: true, path: traceOut, categories: ['loading', 'disabled-by-default-layout_shift.debug'] });
     }
-    await page.goto(url, { waitUntil: 'load', timeout: 60000 });
+    await page.goto(url, { waitUntil: ['load', 'networkidle2'], timeout: 60000 });
     await page.waitForTimeout(3000);
     let cls = await page.evaluate(() => {
       return window.cumulativeLayoutShiftScore;
@@ -99,11 +100,11 @@ async function getAllCLS(url, outDir, numRuns, chromePath) {
   }
   console.log(url, allScores);
   fs.writeFileSync(getTxtPath(url, outDir), allScores.join('\n'));
-  clsForTrace = await getCLS(url, getTracePath(url, outDir), chromePath);
+  // clsForTrace = await getCLS(url, getTracePath(url, outDir), chromePath);
   return allScores;
 }
 
-(async () => {
+function main() {
   const args = process.argv.slice(2);
   const data = fs.readFileSync(args[3], 'utf8');
   const urls = data.split(/\s/);
@@ -120,4 +121,12 @@ async function getAllCLS(url, outDir, numRuns, chromePath) {
     if (!url) continue;
     queue.add(async () => getAllCLS(url, outDir, numRuns, chromePath));
   }
-})();
+}
+
+if (require.main === module) {
+  main();
+}
+
+module.exports = {
+  getCLS,
+};

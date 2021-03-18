@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "argparse": "^2.0.1",
     "p-queue": "^6.6.2",
     "puppeteer-core": "^8.0.0"
   }
